@@ -699,6 +699,29 @@ with tabs[4]:
     interp(f"Nilai maksimum Cook's distance {cd.max():.3f} ({'di bawah' if cd.max() < 1 else 'di atas'} 1, batas umum pengamatan sangat berpengaruh); "
            f"{int((cd > 4 / len(cd)).sum())} pengamatan melewati batas 4/n (garis merah) sehingga perlu dicermati{', tetapi tidak ada yang mendominasi model' if cd.max() < 1 else ', dan ada pengamatan yang sangat berpengaruh'}.")
 
+       # Visualisasi regresi 6: Forest plot koefisien regresi (CI 95%)
+    st.subheader("Visualisasi regresi 6: Forest plot koefisien regresi (CI 95%)")
+    ci = m.conf_int()
+    params_idx = ci.index
+    fp = pd.DataFrame({
+        "Variabel": [nice(k) for k in params_idx],
+        "Koef": m.params.values,
+        "err_plus": ci[1].values - m.params.values,
+        "err_minus": m.params.values - ci[0].values
+    }).sort_values("Koef")
+
+    fig_fp = px.scatter(
+        fp, x="Koef", y="Variabel",
+        error_x="err_plus", error_x_minus="err_minus",
+        labels={"Koef": "Estimasi Nilai Koefisien (Beta)", "Variabel": "Variabel Prediktor"},
+        title="Forest Plot Koefisien Regresi (Interval Kepercayaan 95%)"
+    )
+    fig_fp.update_traces(marker=dict(size=10, color="#1B365D"), error_x=dict(color="#1B365D", thickness=2))
+    fig_fp.add_vline(x=0, line_dash="dash", line_color="red", line_width=1.5)
+    st.plotly_chart(fig_fp)
+    interp("Grafik Forest Plot Koefisien Regresi menunjukkan estimasi titik koefisien dan rentang interval kepercayaan 95%. "
+           "Jika rentang garis tidak memotong garis putus-putus merah (nol), maka variabel prediktor tersebut berpengaruh signifikan secara statistik.")
+       
     # 19. KETERBATASAN MODEL (diminta soal no. 5)
     st.subheader("Keterbatasan model")
     st.markdown("- Harga adalah harga **penawaran** iklan, bukan transaksi.\n"
