@@ -30,5 +30,16 @@ Pastikan Python sudah terinstal di komputer Anda. Ikuti langkah-langkah berikut 
 
 1. **Clone repository ini:**
    ```bash
-   git clone [https://github.com/username-kamu/nama-repo.git](https://github.com/username-kamu/nama-repo.git)
-   cd nama-repo
+  git clone [https://github.com/julianariskaleki/uts-evdm-harga-rumah.git](https://github.com/julianariskaleki/uts-evdm-harga-rumah.git)
+   cd uts-evdm-harga-rumah
+
+Langkah-Langkahnya:
+1. **Instal pustaka/library yang dibutuhkan:**
+    pip install -r requirements.txt
+2. **Jalankan aplikasi Streamlit:**
+   streamlit run app.py
+## 🌐 Tautan Akses Online
+Aplikasi Streamlit Cloud: (Aplikasi Streamlit Cloud: https://julianariskaleki-uts-evdm-harga-rumah.streamlit.app)
+
+  
+   
