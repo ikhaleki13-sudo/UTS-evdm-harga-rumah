@@ -34,8 +34,7 @@ Pastikan Python sudah terinstal di komputer Anda. Ikuti langkah-langkah berikut 
 ## 🌐 Tautan Akses Online
 Aplikasi Streamlit Cloud: 
    ```bash
-   git clone [https://github.com/julianariskaleki/uts-evdm-harga-rumah.git](https://github.com/julianariskaleki/uts-evdm-harga-rumah.git)
-   cd uts-evdm-harga-rumah
+   git clone [https://github.com/julianariskaleki/uts-evdm-harga-rumah.git] cd uts-evdm-harga-rumah
 
   
    
