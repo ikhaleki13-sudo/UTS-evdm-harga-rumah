@@ -27,19 +27,15 @@ Aplikasi interaktif ini dibagi menjadi **6 tab utama** untuk menjawab seluruh ra
 
 ## ⚙️ Cara Menjalankan Aplikasi Secara Lokal
 Pastikan Python sudah terinstal di komputer Anda. Ikuti langkah-langkah berikut di terminal/command prompt:
-
-1. **Clone repository ini:**
-   ```bash
-  git clone [https://github.com/julianariskaleki/uts-evdm-harga-rumah.git](https://github.com/julianariskaleki/uts-evdm-harga-rumah.git)
-   cd uts-evdm-harga-rumah
-
-Langkah-Langkahnya:
 1. **Instal pustaka/library yang dibutuhkan:**
     pip install -r requirements.txt
 2. **Jalankan aplikasi Streamlit:**
    streamlit run app.py
 ## 🌐 Tautan Akses Online
-Aplikasi Streamlit Cloud: (Aplikasi Streamlit Cloud: https://julianariskaleki-uts-evdm-harga-rumah.streamlit.app)
+Aplikasi Streamlit Cloud: 
+   ```bash
+   git clone [https://github.com/julianariskaleki/uts-evdm-harga-rumah.git](https://github.com/julianariskaleki/uts-evdm-harga-rumah.git)
+   cd uts-evdm-harga-rumah
 
   
    
