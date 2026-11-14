@@ -3,10 +3,9 @@
 Repositori ini disusun untuk memenuhi tugas **Ujian Tengah Semester (UTS)** mata kuliah **Eksplorasi dan Visualisasi Data Multivariat (26.1)**.
 
 ## 👤 Identitas Pembuat
-* **Nama Lengkap** : Juliana Riska Betek Leki
-* **NIM** : 231068006
-* **Program Studi** : Statistika
-* **Institusi** : Universitas Akprind Indonesia
+* **Nama Lengkap**    : Juliana Riska Betek Leki
+* **NIM**             : 231068006
+* **Program Studi**   : Statistika
 
 ## 📋 Deskripsi Proyek
 Proyek ini mengimplementasikan *dashboard* interaktif berbasis web menggunakan **Streamlit** untuk mengeksplorasi, menganalisis, dan memodelkan faktor-faktor yang memengaruhi harga penawaran rumah di wilayah Jabodetabek. Analisis ini menggunakan data sekunder dari platform **Rumah123.com** (Dataset Kaggle: *Jabodetabek House Price*).
