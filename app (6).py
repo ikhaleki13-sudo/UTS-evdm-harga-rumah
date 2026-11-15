@@ -687,6 +687,10 @@ with tabs[4]:
         columns=["Asumsi", "Uji", "p-value", "Kesimpulan (α = 5%)"]), hide_index=True)
     # Durbin-Watson/ACF di contoh R tidak dipakai di sini: data rumah bukan data deret waktu
     st.caption("Autokorelasi (Durbin–Watson, ACF) tidak diuji karena data cross-section: baris iklan tidak berurutan waktu.")
+    st.markdown("**Cara membaca tabel ini**\n"
+                "- *Residual* = selisih antara harga sebenarnya dan harga prediksi model (dalam skala ln).\n"
+                "- *Normalitas*: apakah residual berbentuk lonceng (normal). *Homoskedastisitas*: apakah sebaran residual sama lebar di semua tingkat harga.\n"
+                "- Aturannya sama untuk semua uji: **p-value ≥ 0,05 berarti asumsi terpenuhi**, **p-value < 0,05 berarti tidak terpenuhi**.")
     normal_ok, homo_ok = min(sw, ks, jb) >= .05, min(bp, gl) >= .05
     interp(f"Normalitas residual {'terpenuhi' if normal_ok else 'tidak terpenuhi'} dan homoskedastisitas "
            f"{'terpenuhi' if homo_ok else 'tidak terpenuhi'} pada α = 5%. "
@@ -695,6 +699,14 @@ with tabs[4]:
 
     # Upaya memperbaiki asumsi: coba beberapa transformasi lalu bandingkan (soal B.6 membolehkan transformasi)
     st.subheader("Upaya memperbaiki asumsi: perbandingan transformasi")
+    st.markdown("Karena sebagian asumsi tidak terpenuhi, kita mencoba **mengubah bentuk data (transformasi)** untuk melihat "
+                "apakah residual menjadi lebih rapi. Setiap baris di tabel adalah satu cara yang dicoba.\n\n"
+                "**Cara membaca kolom**\n"
+                "- **R²**: seberapa baik model menjelaskan harga (0 sampai 1, makin besar makin baik).\n"
+                "- **Skewness residual**: kemiringan residual. Makin dekat 0 makin simetris.\n"
+                "- **Kurtosis residual**: ketebalan ekor residual. Makin dekat 0 makin sedikit nilai ekstrem.\n"
+                "- **p Shapiro–Wilk**: uji normalitas. Lolos jika p ≥ 0,05.\n"
+                "- **p Breusch–Pagan**: uji kesamaan sebaran residual. Lolos jika p ≥ 0,05.")
     g = f.copy()
     g["bc_y"], lam = stats.boxcox(g.price_miliar)       # Box-Cox: mencari pangkat terbaik untuk harga
     g["sq_y"] = np.sqrt(g.price_miliar)                  # akar kuadrat harga
@@ -719,6 +731,13 @@ with tabs[4]:
     st.dataframe(pd.DataFrame(baris, columns=["Model", "R²", "Skewness residual", "Kurtosis residual",
                                               "p Shapiro–Wilk", "p Breusch–Pagan"]), hide_index=True)
     st.caption("R² antar model dengan skala respons berbeda tidak sebanding langsung; bandingkan terutama kondisi residualnya.")
+    st.markdown("**Artinya untuk analisis ini**\n"
+                + ("- Ada cara yang membuat kedua uji lolos (p ≥ 0,05); pertimbangkan memakai model tersebut.\n" if lolos else
+                   "- Semua cara masih gagal pada kedua uji (p < 0,05), jadi tidak ada transformasi yang memperbaiki asumsi secara formal.\n")
+                + "- Model **ln(harga) ~ ln(luas)** tetap dipakai karena sederhana dan koefisiennya bisa dibaca sebagai persentase perubahan harga.\n"
+                "- Penyebab yang paling mungkin: ada faktor penentu harga yang tidak ada di data (kecamatan, kondisi rumah, jumlah kamar). "
+                "Selain itu, dengan data yang banyak, uji statistik sangat sensitif sehingga penyimpangan kecil pun ditolak.\n"
+                "- Hal ini dicatat sebagai keterbatasan model, dan kesimpulan diperiksa lagi dengan robust standard error di bawah.")
     interp(f"Box-Cox menyarankan λ = {lam:.2f}; "
            f"{'nilai mendekati 0 berarti transformasi log memang pilihan yang tepat untuk harga. ' if abs(lam) < .3 else 'nilai ini berbeda dari 0 sehingga transformasi lain patut dipertimbangkan. '}"
            + ("Ada model kandidat yang memenuhi kedua asumsi." if lolos else
@@ -727,6 +746,9 @@ with tabs[4]:
 
     # Cadangan: robust standard error (HC3) supaya p-value tetap sahih walau ragam residual tidak konstan
     st.subheader("Pemeriksaan ketahanan: robust standard error (HC3)")
+    st.markdown("HC3 adalah cara menghitung p-value yang tetap sahih walau sebaran residual tidak merata. "
+                "**Cara membaca**: bandingkan kolom kiri (cara biasa) dengan kolom kanan (HC3). "
+                "Jika keduanya sama-sama di bawah 0,05 atau sama-sama di atas 0,05, kesimpulan tidak berubah dan hasil regresi dapat dipercaya.")
     h = smf.ols("ln_price ~ " + " + ".join(terms), f).fit(cov_type="HC3")
     st.dataframe(pd.DataFrame({"p-value biasa": m.pvalues.values, "p-value robust (HC3)": h.pvalues.values},
                               index=names).round(4))
