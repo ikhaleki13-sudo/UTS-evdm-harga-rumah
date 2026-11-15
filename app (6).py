@@ -344,14 +344,11 @@ def pf(p):
     return "< 0.001" if p < .001 else f"= {p:.3f}"
 
 
-# interp(): kotak biru di bawah tiap grafik/uji. Selalu diawali "Berdasarkan output ...",
-# lalu: untuk melihat apa (tujuan), hasil data (t), dan artinya (arti)
+# interp(): kotak biru ringkas di bawah tiap grafik/uji. Format: Berdasarkan output X (untuk melihat Y): hasil. Artinya: Z
 def interp(t, tujuan="", arti="", out="grafik di atas"):
-    teks = f"Berdasarkan output {out}"
-    teks += f", yang dipakai untuk melihat {tujuan.rstrip('.')}." if tujuan else ":"
-    teks += f"\n\n**Hasil:** {t}"
+    teks = f"Berdasarkan output {out}" + (f" (untuk melihat {tujuan.rstrip('.')})" if tujuan else "") + f": {t}"
     if arti:
-        teks += f"\n\n**Artinya:** {arti}"
+        teks += f" **Artinya:** {arti}"
     st.info(teks)
 
 
@@ -508,16 +505,11 @@ with tabs[1]:
         nout = int(((s < q1 - 1.5 * (q3 - q1)) | (s > q3 + 1.5 * (q3 - q1))).sum())
         shape = "miring ke kanan (rata-rata > median)" if s.skew() > .5 else \
                 "miring ke kiri" if s.skew() < -.5 else "relatif simetris"
-        arti_s = ("sebagian besar rumah berada di nilai kecil sampai menengah, sedangkan sedikit rumah bernilai sangat besar menarik "
-                  "rata-rata ke atas. Jadi median lebih mewakili rumah 'biasa' daripada rata-rata. Karena miring, regresi memakai ln "
-                  "agar sebarannya lebih simetris." if s.skew() > .5 else
-                  "sebagian besar rumah berada di nilai besar dan hanya sedikit di nilai kecil." if s.skew() < -.5 else
-                  "rata-rata dan median hampir sama, jadi rata-rata cukup mewakili rumah pada umumnya.")
         interp(f"{LBL[v]} berdistribusi {shape}: rata-rata {s.mean():,.2f}, median {s.median():,.2f}, skewness {s.skew():.2f}. "
                f"Terdapat {nout} pencilan menurut aturan IQR ({nout / len(s):.1%} data), yaitu nilai yang jauh di atas kebanyakan rumah.",
-               tujuan=f"bentuk sebaran {LBL[v]}: simetris atau miring, di mana kebanyakan rumah berada, dan adakah nilai ekstrem (pencilan). "
-                      "Histogram menunjukkan bentuk sebaran, boxplot di atasnya menunjukkan median, kuartil, dan pencilan",
-               arti=arti_s,
+               tujuan="bentuk sebaran dan pencilan",
+               arti=("sebagian besar rumah bernilai kecil–menengah, sedikit rumah sangat besar menarik rata-rata ke atas, jadi median lebih mewakili."
+                     if s.skew() > .5 else "sebagian besar rumah bernilai besar." if s.skew() < -.5 else "rata-rata cukup mewakili rumah pada umumnya."),
                out=f"histogram dan boxplot {LBL[v]}")
 
     st.subheader("Visualisasi kategorik")
@@ -527,11 +519,8 @@ with tabs[1]:
     st.plotly_chart(px.bar(cc, x="city", y="n", labels={"city": "Kota", "n": "Jumlah rumah"},
                            title="Jumlah rumah dijual per kota", text="n"))
     interp(f"Kota terbanyak adalah {cc.city[0]} ({cc.n[0]:,} rumah, {cc.n[0] / len(f):.1%}); paling sedikit {cc.city.iloc[-1]} "
-           f"({cc.n.iloc[-1]:,} rumah). Sebaran antar kota tidak seimbang sehingga perbandingan antar kota perlu hati-hati.",
-           tujuan="kota mana yang paling banyak dan paling sedikit datanya",
-           arti="kota dengan data banyak hasilnya lebih dapat dipercaya, sedangkan kota dengan data sedikit estimasinya kurang stabil. "
-                "Karena data adalah iklan yang tayang di situs, komposisi ini belum tentu mewakili semua rumah di Jabodetabek.",
-           out="diagram batang jumlah rumah per kota")
+           f"({cc.n.iloc[-1]:,} rumah).",
+           tujuan="kota dengan data terbanyak dan tersedikit", arti="kota dengan data sedikit hasilnya kurang stabil.", out="diagram batang jumlah rumah per kota")
 
     st.markdown("**Visualisasi 5: Diagram lingkaran komposisi sertifikat**")
     ct = f.certificate.value_counts().reset_index()
@@ -541,10 +530,7 @@ with tabs[1]:
                            title="Komposisi rumah menurut jenis sertifikat"))
     interp(f"Sertifikat dominan: {ct.certificate[0]} ({ct.n[0] / len(f):.1%} data). Kategori lain jauh lebih kecil, "
            "jadi perbandingan harga antar sertifikat didasarkan pada jumlah rumah yang tidak seimbang.",
-           tujuan="komposisi jenis sertifikat: berapa bagian rumah yang SHM, HGB, lainnya, atau tidak diketahui",
-           arti="kalau satu jenis mendominasi, perbandingan harga antar sertifikat jadi tidak seimbang, "
-                "dan kategori yang kecil kurang kuat dipakai untuk menarik kesimpulan.",
-           out="diagram lingkaran komposisi sertifikat")
+           tujuan="komposisi jenis sertifikat", arti="jenis sertifikat yang kecil kurang kuat untuk dibandingkan.", out="diagram lingkaran sertifikat")
 
 # TAB 3. EKSPLORASI BIVARIAT (Soal no. 3) - 2 variabel per grafik
 with tabs[2]:
@@ -563,12 +549,9 @@ with tabs[2]:
     arah = "positif" if pr > 0 else "negatif"
     interp(f"Hubungan {arah}: korelasi Pearson {pr:.2f}, Spearman {sp:.2f}. Semakin besar {LBL[xv].lower()}, harga cenderung "
            f"{'naik' if pr > 0 else 'turun'}, tetapi sebaran lebar, artinya ukuran saja belum cukup menjelaskan harga.",
-           tujuan="apakah ada hubungan antara ukuran rumah dan harga, serta arah dan kekuatannya. Garis tren menunjukkan pola rata-rata; "
-                  "Pearson mengukur hubungan garis lurus, Spearman mengukur hubungan urutan (tahan pencilan)",
-           arti=f"hubungannya {kuat_r} dan {'searah' if pr > 0 else 'berlawanan arah'}: rumah yang lebih luas cenderung "
-                f"{'lebih mahal' if pr > 0 else 'lebih murah'}. Titik yang menyebar jauh dari garis berarti ukuran bukan satu-satunya penentu harga "
-                "(lokasi dan kondisi rumah juga berperan). Korelasi hanya menunjukkan keterkaitan, bukan bahwa luas menyebabkan harga naik.",
-           out="scatter plot harga vs luas beserta garis tren dan korelasi Pearson/Spearman")
+           tujuan="hubungan ukuran rumah dengan harga",
+           arti=f"hubungan {kuat_r} dan {'searah' if pr > 0 else 'berlawanan arah'}: rumah lebih luas cenderung {'lebih mahal' if pr > 0 else 'lebih murah'}, tetapi bukan sebab-akibat.",
+           out="scatter plot harga vs luas")
 
     st.subheader("Visualisasi 2: Boxplot harga per kota (numerik–kategorik)")
     ly = st.checkbox("Skala log pada harga", value=True, key="ly2")
@@ -577,23 +560,16 @@ with tabs[2]:
                            labels=LBL, title="Distribusi harga per kota (urut median)"))
     md = f.groupby("city").price_miliar.median().sort_values()
     interp(f"Median harga tertinggi di {md.index[-1]} (Rp{md.iloc[-1]:.2f} miliar) dan terendah di {md.index[0]} "
-           f"(Rp{md.iloc[0]:.2f} miliar), selisih {md.iloc[-1] / md.iloc[0]:.1f} kali. Lokasi sangat membedakan harga.",
-           tujuan="apakah harga berbeda antar kota: kotak = 50% harga tengah, garis dalam kotak = median, titik di luar = pencilan",
-           arti="kalau median dan posisi kotak antar kota berbeda jauh, lokasi berkaitan kuat dengan harga. "
-                "Kotak yang tinggi atau lebar berarti harga di kota itu sangat bervariasi. Inilah alasan kota dimasukkan sebagai prediktor di regresi.",
-           out="boxplot harga per kota")
+           f"(Rp{md.iloc[0]:.2f} miliar), selisih {md.iloc[-1] / md.iloc[0]:.1f} kali.",
+           tujuan="perbedaan harga antar kota", arti="lokasi berkaitan kuat dengan harga, jadi kota dimasukkan ke regresi.", out="boxplot harga per kota")
 
     st.subheader("Visualisasi 3: Boxplot harga per sertifikat (numerik–kategorik)")
     st.plotly_chart(px.box(f, x="certificate", y="price_miliar", color="certificate", log_y=True,
                            labels=LBL, title="Distribusi harga per jenis sertifikat"))
     mc = f.groupby("certificate").price_miliar.median().sort_values()
     interp("Median harga per sertifikat: " + ", ".join(f"{k} Rp{v:.2f} miliar" for k, v in mc.items()) +
-           ". Perbedaan ini belum mengontrol ukuran dan kota, jadi diuji ulang di regresi.",
-           tujuan="apakah harga berbeda menurut jenis sertifikat",
-           arti="kalau median antar sertifikat berbeda, sertifikat tampak berkaitan dengan harga. Tetapi bisa jadi itu karena jenis sertifikat "
-                "tertentu lebih banyak di kota mahal atau rumah besar, jadi belum bisa disimpulkan sebagai pengaruh sertifikat itu sendiri. "
-                "Hal ini dicek di regresi.",
-           out="boxplot harga per jenis sertifikat")
+           ".",
+           tujuan="perbedaan harga antar sertifikat", arti="beda median belum tentu karena sertifikat, bisa karena kota atau ukuran; dicek di regresi.", out="boxplot harga per sertifikat")
 
     st.subheader("Visualisasi 4: Komposisi sertifikat per kota (kategorik–kategorik)")
     # barnorm="percent": tiap batang jadi 100% supaya proporsi antar kota bisa dibandingkan
@@ -613,15 +589,11 @@ with tabs[2]:
             txt = f"Proporsi SHM tertinggi di {shm.index[-1]} ({shm.iloc[-1]:.1f}%) dan terendah di {shm.index[0]} ({shm.iloc[0]:.1f}%). "
         else:
             txt = ""
-        arti_c = (f"komposisi sertifikat berbeda antar kota, jadi kota dan jenis sertifikat tidak sepenuhnya terpisah. "
-                  f"Karena V = {cv:.2f} (hubungan {kuat}), perbedaannya {'cukup nyata' if cv >= .3 else 'ada tetapi kecil'}."
-                  if pchi < .05 else
-                  "tidak cukup bukti bahwa komposisi sertifikat berbeda antar kota, jadi sebaran sertifikatnya relatif mirip di semua kota.")
         interp(txt + f"Uji chi-square p {pf(pchi)} ({'ada' if pchi < .05 else 'tidak ada'} hubungan kota dengan jenis sertifikat); "
                f"Cramér's V = {cv:.2f} (hubungan {kuat}). Catatan: sebagian sel berisi sedikit rumah, jadi hasil uji perlu hati-hati.",
-               tujuan="apakah jenis sertifikat berhubungan dengan kota (kategorik vs kategorik). H0: tidak ada hubungan. "
-                      "Cramér's V mengukur kekuatan hubungan dari 0 (tidak ada) sampai 1 (sangat kuat)",
-               arti=arti_c,
+               tujuan="hubungan jenis sertifikat dengan kota",
+               arti=(f"komposisi sertifikat berbeda antar kota (V = {cv:.2f}, hubungan {kuat})." if pchi < .05
+                     else "komposisi sertifikat relatif sama di semua kota."),
                out="diagram batang bertumpuk dan uji chi-square")
     else:
         st.info("Pilih minimal 2 kota dan 2 jenis sertifikat di sidebar untuk melihat hubungan kategorik–kategorik.")
@@ -638,11 +610,7 @@ with tabs[3]:
     rr = f[["ln_land", "ln_bld"]].corr().iloc[0, 1]    # korelasi dua luas (skala log)
     interp(f"Luas tanah dan luas bangunan berkorelasi kuat (r = {rr:.2f} pada skala log), sehingga titik membentuk pita naik. "
            "Titik besar (harga tinggi) menumpuk di area luas besar, dan warna kota terlihat berkelompok di area tertentu.",
-           tujuan="hubungan empat variabel sekaligus: luas tanah (sumbu x), luas bangunan (sumbu y), kota (warna), dan harga (ukuran titik)",
-           arti="korelasi yang tinggi antara dua luas berarti keduanya membawa informasi yang mirip, sehingga di regresi bisa terjadi "
-                "multikolinearitas (dicek lewat VIF). Titik besar yang menumpuk di area luas besar menunjukkan harga naik bersama ukuran, "
-                "dan warna yang berkelompok menunjukkan lokasi punya pola ukuran dan harga sendiri.",
-           out="bubble plot luas tanah, luas bangunan, harga, dan kota")
+           tujuan="hubungan luas tanah, luas bangunan, harga, dan kota", arti="kedua luas saling berkorelasi tinggi, jadi perlu dicek VIF.", out="bubble plot")
 
     st.subheader("Visualisasi 2: Harga vs luas bangunan per kota dan sertifikat")
     # facet_col="city" memecah grafik per kota (panel kecil), warna = sertifikat
@@ -653,11 +621,8 @@ with tabs[3]:
     ppm = (f.price_miliar * 1000 / f.building_size_m2).groupby(f.city).median().sort_values()
     interp(f"Di setiap kota hubungan harga–luas bangunan tetap positif, tetapi posisi vertikal kelompok berbeda: median harga per m² "
            f"bangunan tertinggi di {ppm.index[-1]} (Rp{ppm.iloc[-1]:.1f} juta) dan terendah di {ppm.index[0]} (Rp{ppm.iloc[0]:.1f} juta). "
-           "Artinya pada luas yang sama, lokasi menentukan harga.",
-           tujuan="apakah hubungan harga dan luas bangunan sama di setiap kota, sambil membandingkan tingkat harga antar kota pada luas yang sama",
-           arti="kalau garis tiap kota sejajar tetapi posisinya beda tinggi, lokasi menggeser harga ke atas atau bawah tanpa mengubah efek luas, "
-                "dan itulah yang ditangkap dummy kota di regresi. Kalau kemiringannya berbeda-beda, efek luas bergantung pada kota sehingga perlu suku interaksi.",
-           out="scatter plot harga vs luas bangunan per kota")
+           "",
+           tujuan="apakah pola harga–luas sama di tiap kota", arti="pada luas yang sama, lokasi menggeser harga.", out="scatter plot per kota")
 
     st.subheader("Visualisasi 3: Heatmap korelasi variabel numerik (skala log)")
     cm = f[["ln_price", "ln_land", "ln_bld"]].corr()          # matriks korelasi Pearson
@@ -665,11 +630,8 @@ with tabs[3]:
     st.plotly_chart(px.imshow(cm, text_auto=".2f", zmin=-1, zmax=1, color_continuous_scale="RdBu_r",
                               labels=dict(color="Korelasi"), title="Matriks korelasi Pearson"))
     interp(f"ln(Harga) berkorelasi kuat dengan ln(Luas bangunan) (r = {cm.iloc[0, 2]:.2f}) dan ln(Luas tanah) (r = {cm.iloc[0, 1]:.2f}); "
-           f"kedua luas saling berkorelasi (r = {cm.iloc[1, 2]:.2f}), sehingga multikolinearitas perlu dicek lewat VIF.",
-           tujuan="korelasi semua pasangan variabel numerik sekaligus. Merah berarti searah, biru berlawanan arah, makin pekat makin kuat",
-           arti="ln(Harga) berkorelasi tinggi dengan kedua luas, berarti keduanya layak jadi prediktor. Korelasi tinggi antara luas tanah dan "
-                "luas bangunan menjadi peringatan bahwa koefisien keduanya bisa kurang stabil.",
-           out="heatmap korelasi variabel numerik")
+           f"kedua luas saling berkorelasi (r = {cm.iloc[1, 2]:.2f}).",
+           tujuan="kekuatan korelasi antarvariabel", arti="kedua luas layak jadi prediktor, tetapi saling berkorelasi (cek VIF).", out="heatmap korelasi")
 
 # TAB 5. REGRESI LINEAR BERGANDA (Soal no. 5)
 with tabs[4]:
@@ -724,20 +686,11 @@ with tabs[4]:
     bl, bb = m.params["ln_land"], m.params["ln_bld"]
     sig = int((m.pvalues.drop("Intercept") < .05).sum())
     st.subheader("Interpretasi koefisien dan pengujian")
-    st.markdown(f"- **Luas tanah**: naik 1% → harga naik sekitar {bl:.2f}% (kota, sertifikat, luas bangunan tetap), "
-                f"{'signifikan' if m.pvalues['ln_land'] < .05 else 'tidak signifikan'} (p {pf(m.pvalues['ln_land'])}). "
-                f"*Artinya*: model log-log, jadi koefisien dibaca sebagai elastisitas; "
-                f"{'tanah yang lebih luas berkaitan nyata dengan harga yang lebih tinggi' if m.pvalues['ln_land'] < .05 else 'luas tanah tidak berkaitan nyata dengan harga setelah ukuran bangunan dan lokasi diperhitungkan'}.\n"
-                f"- **Luas bangunan**: naik 1% → harga naik sekitar {bb:.2f}%, "
-                f"{'signifikan' if m.pvalues['ln_bld'] < .05 else 'tidak signifikan'} (p {pf(m.pvalues['ln_bld'])}). "
-                f"*Artinya*: {'bangunan yang lebih luas berkaitan nyata dengan harga yang lebih tinggi' if m.pvalues['ln_bld'] < .05 else 'luas bangunan tidak berkaitan nyata dengan harga pada model ini'}"
-                f"{'; karena koefisiennya lebih besar dari luas tanah, harga lebih responsif terhadap luas bangunan.' if (m.pvalues['ln_bld'] < .05 and bb > bl) else '.'}\n"
-                "- **Dummy kategorik**: kolom *Efek harga (%)* = selisih harga rata-rata (geometrik) dibanding kategori acuan, prediktor lain tetap. "
-                "*Artinya*: angka +30% berarti rumah di kota itu rata-rata 30% lebih mahal daripada kota acuan pada ukuran dan sertifikat yang sama; angka negatif berarti lebih murah.\n"
-                f"- **Uji simultan F**: p {pf(m.f_pvalue)} → {'minimal satu' if m.f_pvalue < .05 else 'tidak ada'} prediktor berpengaruh pada α = 5%. "
-                f"*Artinya*: {'model secara keseluruhan bermakna dan lebih baik daripada tanpa prediktor' if m.f_pvalue < .05 else 'model tidak lebih baik daripada tanpa prediktor'}.\n"
-                f"- **Uji parsial t**: {sig} dari {len(m.params) - 1} koefisien signifikan pada α = 5%. "
-                "*Artinya*: tiap variabel yang signifikan memberi sumbangan sendiri pada harga, bukan hanya ikut-ikutan variabel lain.")
+    st.markdown(f"- **Luas tanah**: naik 1% → harga naik sekitar {bl:.2f}% ({'signifikan' if m.pvalues['ln_land'] < .05 else 'tidak signifikan'}, p {pf(m.pvalues['ln_land'])}).\n"
+                f"- **Luas bangunan**: naik 1% → harga naik sekitar {bb:.2f}% ({'signifikan' if m.pvalues['ln_bld'] < .05 else 'tidak signifikan'}, p {pf(m.pvalues['ln_bld'])}).\n"
+                "- **Dummy kategorik**: *Efek harga (%)* = selisih harga dibanding kategori acuan; +30% berarti 30% lebih mahal pada ukuran yang sama.\n"
+                f"- **Uji F**: p {pf(m.f_pvalue)} → {'minimal satu' if m.f_pvalue < .05 else 'tidak ada'} prediktor berpengaruh (α = 5%).\n"
+                f"- **Uji t**: {sig} dari {len(m.params) - 1} koefisien signifikan (α = 5%).")
 
     # UJI ASUMSI RESIDUAL
     X = m.model.exog
@@ -753,13 +706,10 @@ with tabs[4]:
     cd = m.get_influence().cooks_distance[0]               # Cook's distance
 
     st.subheader("Evaluasi model")
-    st.markdown(f"- R² = {m.rsquared:.3f}: model menjelaskan {m.rsquared * 100:.1f}% variasi ln(harga); R² adj. = {m.rsquared_adj:.3f}. "
-                "*Artinya*: sisanya dijelaskan faktor yang tidak ada di data (kondisi rumah, jumlah kamar, kecamatan).\n"
-                f"- RMSE = {rmse:.3f} (skala ln) ≈ kesalahan prediksi harga sekitar {(np.exp(rmse) - 1) * 100:.0f}%. "
-                "*Artinya*: prediksi model rata-rata meleset sebesar persentase itu dari harga sebenarnya.\n"
+    st.markdown(f"- R² = {m.rsquared:.3f}: model menjelaskan {m.rsquared * 100:.1f}% variasi ln(harga); sisanya faktor di luar data.\n"
+                f"- RMSE = {rmse:.3f} (skala ln) ≈ kesalahan prediksi harga sekitar {(np.exp(rmse) - 1) * 100:.0f}%.\n"
                 f"- VIF ln(Luas tanah) = {vf['ln_land']:.2f}, ln(Luas bangunan) = {vf['ln_bld']:.2f} "
-                f"({'multikolinearitas rendah-sedang' if max(vf.values()) < 5 else 'multikolinearitas tinggi (≥ 5)'}). "
-                f"*Artinya*: {'kedua luas tidak terlalu tumpang tindih, jadi koefisiennya masih stabil.' if max(vf.values()) < 5 else 'kedua luas terlalu tumpang tindih, jadi koefisiennya tidak stabil.'}")
+                f"({'multikolinearitas rendah-sedang' if max(vf.values()) < 5 else 'multikolinearitas tinggi (≥ 5)'}).")
 
     st.subheader("Uji asumsi residual")
     # Aturan keputusan: p-value >= 0.05 berarti asumsi terpenuhi (H0 tidak ditolak)
@@ -779,14 +729,11 @@ with tabs[4]:
     normal_ok, homo_ok = min(sw, ks, jb) >= .05, min(bp, gl) >= .05
     interp(f"Normalitas residual {'terpenuhi' if normal_ok else 'tidak terpenuhi'} dan homoskedastisitas "
            f"{'terpenuhi' if homo_ok else 'tidak terpenuhi'} pada α = 5%. "
-           + ("" if normal_ok and homo_ok else "Dengan n besar koefisien tetap konsisten, tetapi uji t dan p-value perlu dibaca hati-hati "
-              "(uji juga sangat sensitif pada n besar)."),
-           tujuan="apakah model OLS memenuhi asumsinya (residual normal dan ragamnya konstan). Kalau terpenuhi, uji t, uji F, dan selang kepercayaan sahih",
-           arti=("kedua asumsi terpenuhi, jadi p-value dan selang kepercayaan bisa dipercaya apa adanya."
-                 if normal_ok and homo_ok else
-                 "ada asumsi yang tidak terpenuhi (p < 0,05). Koefisien umumnya masih tidak bias, tetapi p-value dan selang kepercayaan bisa kurang tepat. "
-                 "Karena itu hasilnya dicek ulang dengan HC3 di bawah. Dengan data yang banyak, uji juga sangat sensitif sehingga penyimpangan kecil pun ditolak."),
-           out="uji asumsi residual (Shapiro–Wilk, Kolmogorov–Smirnov, Jarque–Bera, Breusch–Pagan, Glejser)")
+           + "",
+           tujuan="apakah asumsi residual terpenuhi",
+           arti=("uji t, uji F, dan selang kepercayaan sahih." if normal_ok and homo_ok
+                 else "p-value dan selang kepercayaan kurang tepat, jadi dicek ulang dengan HC3."),
+           out="uji asumsi residual")
 
     # Upaya memperbaiki asumsi: coba beberapa transformasi lalu bandingkan
     st.subheader("Upaya memperbaiki asumsi: perbandingan transformasi")
@@ -834,10 +781,9 @@ with tabs[4]:
            + ("Ada model kandidat yang memenuhi kedua asumsi." if lolos else
               "Tidak ada kandidat yang membuat normalitas dan homoskedastisitas sama-sama terpenuhi, "
               "sehingga model ln(harga) tetap dipakai dan keterbatasannya dijelaskan."),
-           tujuan="pangkat transformasi terbaik untuk harga supaya residual lebih rapi. λ ≈ 0 setara log, λ ≈ 0,5 setara akar, λ ≈ 1 berarti tanpa transformasi",
-           arti=("λ dekat 0 berarti memakai ln(harga) sudah tepat." if abs(lam) < .3 else
-                 "λ jauh dari 0 berarti ada transformasi lain yang mungkin lebih cocok daripada log."),
-           out="transformasi Box-Cox dan tabel perbandingan transformasi")
+           tujuan="transformasi terbaik untuk harga",
+           arti=("λ dekat 0, jadi ln(harga) sudah tepat." if abs(lam) < .3 else "ada transformasi lain yang mungkin lebih cocok."),
+           out="transformasi Box-Cox")
 
     # Robust standard error (HC3): p-value tetap sahih walau ragam residual tidak konstan
     st.subheader("Pemeriksaan ketahanan: robust standard error (HC3)")
@@ -850,13 +796,11 @@ with tabs[4]:
     sama = bool(((m.pvalues < .05) == (h.pvalues < .05)).all())
     sig_h = int((h.pvalues.drop("Intercept") < .05).sum())
     interp(f"Dengan HC3, {sig_h} dari {len(m.params) - 1} koefisien signifikan (sebelumnya {sig}). "
-           + ("Keputusan uji tidak berubah pada koefisien mana pun, jadi kesimpulan regresi tahan terhadap ragam residual yang tidak konstan."
+           + ("Keputusan uji tidak berubah pada koefisien mana pun."
               if sama else "Ada koefisien yang keputusannya berubah, jadi p-value biasa perlu dibaca hati-hati."),
-           tujuan="apakah kesimpulan signifikan atau tidak berubah jika ragam residual tidak konstan",
-           arti=("keputusan sama di semua koefisien, jadi kesimpulan regresi kuat dan tidak bergantung pada asumsi ragam konstan."
-                 if sama else
-                 "ada koefisien yang keputusannya berubah, jadi koefisien itu belum bisa dianggap pasti signifikan dan harus dibaca hati-hati."),
-           out="perbandingan p-value biasa dan robust (HC3)")
+           tujuan="apakah kesimpulan tahan terhadap ragam residual tidak konstan",
+           arti=("kesimpulan regresi kuat." if sama else "sebagian p-value perlu dibaca hati-hati."),
+           out="p-value biasa vs robust (HC3)")
 
     # VISUALISASI REGRESI (6 grafik)
     st.subheader("Visualisasi regresi 1: Nilai aktual vs prediksi")
@@ -869,10 +813,7 @@ with tabs[4]:
     st.plotly_chart(fig)
     interp(f"Titik mengikuti garis y = x dengan R² = {m.rsquared:.2f}; makin dekat garis, makin akurat prediksi. "
            "Sebaran di sekitar garis menunjukkan galat yang masih ada.",
-           tujuan="seberapa dekat prediksi model dengan harga sebenarnya. Titik tepat di garis putus-putus berarti prediksi akurat",
-           arti=f"R² = {m.rsquared:.2f} berarti sekitar {m.rsquared * 100:.0f}% variasi harga terjelaskan model, sisanya karena faktor yang tidak ada di data. "
-                "Titik di atas garis = harga sebenarnya lebih mahal dari prediksi; titik di bawah garis = lebih murah dari prediksi.",
-           out="grafik nilai aktual vs prediksi")
+           tujuan="kedekatan prediksi dengan harga sebenarnya", arti=f"model menjelaskan sekitar {m.rsquared * 100:.0f}% variasi harga.", out="grafik aktual vs prediksi")
 
     st.subheader("Visualisasi regresi 2: Residual vs nilai prediksi")
     fig = px.scatter(x=fv, y=res, opacity=.4,
@@ -881,23 +822,17 @@ with tabs[4]:
     st.plotly_chart(fig)
     interp(f"Residual seharusnya acak di sekitar nol tanpa pola. Uji Breusch–Pagan p {pf(bp)} "
            f"({'ada indikasi sebaran residual tidak merata' if bp < .05 else 'tidak menunjukkan masalah'}).",
-           tujuan="linearitas dan kekonstanan ragam. Pola yang diharapkan adalah awan titik acak, rata, di sekitar garis nol",
-           arti=("tidak ada pola jelas, jadi hubungan linear dan ragam residual cukup konstan."
-                 if bp >= .05 else
-                 "pola melebar atau menyempit seperti corong menandakan ragam residual tidak konstan (heteroskedastisitas), artinya ketepatan "
-                 "prediksi berbeda di tiap tingkat harga. Pola melengkung berarti hubungannya tidak sepenuhnya linear."),
-           out="grafik residual vs nilai prediksi")
+           tujuan="pola residual (linearitas dan ragam)",
+           arti=("tidak ada pola jelas, ragam residual cukup konstan." if bp >= .05 else "pola corong: ragam residual tidak konstan."),
+           out="grafik residual vs prediksi")
 
     st.subheader("Visualisasi regresi 3: Histogram residual")
     st.plotly_chart(px.histogram(x=res, nbins=40, labels={"x": "Residual"}, title="Distribusi residual")
                     .update_layout(yaxis_title="Frekuensi"))
     interp(f"Residual berpusat di sekitar nol (rata-rata {res.mean():.3f}), skewness {stats.skew(res):.2f}, kurtosis berlebih {stats.kurtosis(res):.2f}. "
            f"{'Bentuknya mendekati lonceng.' if normal_ok else 'Ekor lebih tebal dari kurva normal (banyak residual ekstrem).' if stats.kurtosis(res) > 1 else 'Bentuknya agak menyimpang dari normal.'}",
-           tujuan="apakah residual berbentuk lonceng simetris di sekitar nol (asumsi normalitas)",
-           arti=("bentuknya mendekati lonceng, jadi residual relatif normal."
-                 if normal_ok else
-                 "bentuk menyimpang dari lonceng. Ekor yang tebal berarti ada rumah yang harganya meleset jauh dari prediksi, "
-                 "kemungkinan karena faktor yang tidak terukur (kondisi rumah, kecamatan)."),
+           tujuan="bentuk sebaran residual",
+           arti=("residual relatif normal." if normal_ok else "residual menyimpang dari normal (ekor tebal)."),
            out="histogram residual")
 
     st.subheader("Visualisasi regresi 4: Q-Q plot residual")
@@ -909,10 +844,8 @@ with tabs[4]:
     st.plotly_chart(fig)
     interp(f"Titik {'mengikuti garis' if normal_ok else 'menjauhi garis di kedua ujung'}: "
            f"{'residual mendekati normal.' if normal_ok else 'ekor distribusi lebih berat dari normal, sejalan dengan uji Shapiro–Wilk.'}",
-           tujuan="apakah residual berdistribusi normal (cara lain memeriksa normalitas): kalau normal, titik menempel pada garis",
-           arti=("titik mengikuti garis, jadi residual mendekati normal."
-                 if normal_ok else
-                 "titik menjauh di ujung kiri dan kanan, artinya ada lebih banyak nilai ekstrem daripada yang diharapkan pada distribusi normal."),
+           tujuan="normalitas residual",
+           arti=("residual mendekati normal." if normal_ok else "ada lebih banyak nilai ekstrem daripada distribusi normal."),
            out="Q-Q plot residual")
 
     st.subheader("Visualisasi regresi 5: Cook's distance (pengamatan berpengaruh)")
@@ -923,11 +856,8 @@ with tabs[4]:
     interp(f"Nilai maksimum Cook's distance {cd.max():.3f} ({'di bawah' if cd.max() < 1 else 'di atas'} 1, batas umum pengamatan sangat berpengaruh); "
            f"{int((cd > 4 / len(cd)).sum())} pengamatan melewati batas 4/n (garis putus-putus) sehingga perlu dicermati"
            f"{', tetapi tidak ada yang mendominasi model' if cd.max() < 1 else ', dan ada pengamatan yang sangat berpengaruh'}.",
-           tujuan="pengamatan yang terlalu berpengaruh pada hasil model (kalau dibuang, koefisien bisa berubah banyak)",
-           arti=("tidak ada satu pun pengamatan yang mendominasi model. Titik yang melewati garis hanya perlu dicermati, belum tentu harus dibuang."
-                 if cd.max() < 1 else
-                 "ada pengamatan yang sangat berpengaruh, jadi perlu dicek apakah itu data salah input atau rumah yang memang unik, "
-                 "lalu model dibandingkan dengan dan tanpa titik itu."),
+           tujuan="pengamatan yang sangat berpengaruh",
+           arti=("tidak ada pengamatan yang mendominasi model." if cd.max() < 1 else "ada pengamatan sangat berpengaruh, perlu dicek."),
            out="grafik Cook's distance")
 
     st.subheader("Visualisasi regresi 6: Forest plot koefisien regresi (CI 95%)")
@@ -947,10 +877,7 @@ with tabs[4]:
     interp(f"Titik adalah estimasi koefisien dan garis horizontal adalah interval kepercayaan 95%. "
            f"{nsig} dari {len(m.params) - 1} koefisien tidak memotong garis nol, artinya signifikan pada α = 5%; "
            "yang memotong nol tidak berbeda nyata dari nol.",
-           tujuan="besar, arah, dan ketelitian tiap koefisien. Titik = estimasi, garis = selang kepercayaan 95%, garis putus-putus = nol (tidak berpengaruh)",
-           arti="garis yang tidak memotong nol berarti variabel itu berpengaruh nyata. Titik di kanan nol menaikkan ln(harga), di kiri nol menurunkan, "
-                "dan garis yang pendek berarti estimasinya presisi. Garis yang memotong nol berarti pengaruhnya tidak bisa dibedakan dari nol.",
-           out="forest plot koefisien regresi")
+           tujuan="besar dan signifikansi tiap koefisien", arti="garis yang tidak memotong nol berarti pengaruhnya nyata.", out="forest plot koefisien")
 
     st.subheader("Keterbatasan model")
     st.markdown("- Harga adalah harga **penawaran** iklan, bukan transaksi.\n"
