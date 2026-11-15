@@ -15,6 +15,13 @@ from statsmodels.stats.diagnostic import het_breuschpagan          # uji heteros
 from statsmodels.stats.outliers_influence import variance_inflation_factor as vif  # VIF
 from statsmodels.stats.stattools import jarque_bera                # uji normalitas Jarque-Bera
 
+# 0b. PALET WARNA
+# Indigo (judul) dan teal (aksen utama) dipilih karena dekat dengan warna batik indigo dan ubin rumah; kuning hanya untuk sorotan
+INDIGO, TEAL, KUNING, LANGIT = "#1F2A5C", "#1B8A8F", "#F2B84B", "#7FD1CF"
+PALET = [TEAL, "#2D3E8C", KUNING, "#8E5BA8", "#4DA3E0", "#E0775B", "#5BAA6E", "#7A8199", "#C9577F"]
+px.defaults.template = "plotly_white"              # latar grafik putih bersih
+px.defaults.color_discrete_sequence = PALET        # urutan warna semua grafik mengikuti palet ini
+
 # 1. KONFIGURASI HALAMAN
 # Judul tab browser, ikon, dan layout lebar supaya grafik muat
 st.set_page_config(page_title="Harga Rumah Jabodetabek", page_icon="🏠", layout="wide")
@@ -371,8 +378,52 @@ f = df[df.city.isin(sc) & df.certificate.isin(ss) & df.price_miliar.between(lo, 
 st.sidebar.metric("Observasi terpilih", f"{len(f):,}")
 
 # 7. JUDUL DAN TAB
-st.title("🏠 Eksplorasi & Regresi Harga Rumah Jabodetabek")
-st.caption("UTS Eksplorasi dan Visualisasi Data Multivariat · Program Studi Statistika, Universitas Akprind Indonesia")
+# Gaya tampilan (CSS): font, warna latar, kartu angka, tab, dan kotak interpretasi
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+html, body, .stApp, .stApp p, .stApp li, .stApp label, [data-testid="stMarkdownContainer"] {
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; color: #1D2433; }
+.stApp { background: #F3F8F8; }
+.stApp h1, .stApp h2, .stApp h3, .stApp h4 { font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; color: #1F2A5C !important; font-weight: 700; letter-spacing: -0.01em; }
+.stApp .hero h1 { color: #FFFFFF !important; }
+span[data-baseweb="tag"] { background-color: #1B8A8F !important; }
+div[data-testid="stSlider"] div[role="slider"] { background-color: #1B8A8F !important; }
+div[data-testid="stSlider"] div[style*="linear-gradient"] { background: #1B8A8F !important; }
+section[data-testid="stSidebar"] { background: #E2EEEF; }
+div[data-testid="stMetric"] { background: #FFFFFF; border-left: 5px solid #1B8A8F; border-radius: 10px; padding: 10px 14px; }
+button[data-baseweb="tab"] { font-weight: 600; color: #4A5470; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #1F2A5C; }
+div[data-baseweb="tab-highlight"] { background-color: #F2B84B !important; height: 3px; }
+div[data-testid="stAlert"] { background: #E3F1F2 !important; border-left: 5px solid #1B8A8F; border-radius: 8px; color: #1D2433; }
+.hero { background: #1F2A5C; border-radius: 16px; padding: 28px 32px 22px 32px; display: flex; flex-wrap: wrap;
+        gap: 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+.hero h1 { color: #FFFFFF; font-size: 2.1rem; margin: 0 0 8px 0; padding: 0; }
+.hero p { color: #C9D3F0; margin: 0 0 6px 0; max-width: 460px; line-height: 1.55; }
+.hero .meta { color: #8F9CCB; font-size: 0.8rem; }
+.kota { display: flex; align-items: flex-end; gap: 10px; }
+.rm { display: flex; flex-direction: column; align-items: center; width: 54px; }
+.rb { width: 46px; background: #7FD1CF; clip-path: polygon(50% 0%, 100% 26%, 100% 100%, 0% 100%, 0% 26%); }
+.rb.tinggi { background: #F2B84B; }
+.rv { color: #FFFFFF; font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; }
+.rk { color: #AEB9E0; font-size: 0.66rem; margin-top: 5px; text-align: center; line-height: 1.15; }
+.ket { color: #8F9CCB; font-size: 0.72rem; margin-top: 8px; text-align: right; }
+</style>
+""", unsafe_allow_html=True)
+
+# Beranda: judul + deretan rumah. Tinggi tiap rumah = median harga kota itu (data asli, tidak ikut filter)
+med = df.groupby("city").price_miliar.median().sort_values()
+rumah = "".join(
+    f'<div class="rm"><span class="rv">{v:.1f}</span>'
+    f'<div class="rb{" tinggi" if k == med.index[-1] else ""}" style="height:{22 + 92 * v / med.max():.0f}px"></div>'
+    f'<span class="rk">{k.replace("Jakarta ", "Jkt ")}</span></div>' for k, v in med.items())
+st.markdown(
+    f'<div class="hero"><div><h1>Harga rumah Jabodetabek</h1>'
+    f'<p>Eksplorasi data dan regresi linear berganda dari {len(df):,} iklan rumah dijual, '
+    f'untuk melihat apa yang paling berkaitan dengan harga.</p>'
+    f'<span class="meta">UTS Eksplorasi dan Visualisasi Data Multivariat, Program Studi Statistika, Universitas Akprind Indonesia</span></div>'
+    f'<div><div class="kota">{rumah}</div><div class="ket">Median harga per kota (Rp miliar)</div></div></div>',
+    unsafe_allow_html=True)
 # Jika filter terlalu ketat (< 30 baris), hentikan supaya model tidak error
 if len(f) < 30:
     st.warning("Data terlalu sedikit (< 30). Longgarkan filter di sidebar.")
